@@ -524,24 +524,37 @@ ParseModelGrpc(
 
 void
 ParseModelHttp(
-    const rapidjson::Document& model_metadata,
+    const ni::TritonJson::Value& model_metadata,
     const rapidjson::Document& model_config, const size_t batch_size,
     ModelInfo* model_info)
 {
-  const auto& input_itr = model_metadata.FindMember("inputs");
+  std::string model_name;
+  {
+    const char* name;
+    size_t namelen;
+    nic::Error err = model_metadata.MemberAsString("name", &name, &namelen);
+    if (!err.IsOk()) {
+      std::cerr << "error: expecting model name: " << err << std::endl;
+      exit(1);
+    }
+
+    model_name.assign(name, namelen);
+  }
+
   size_t input_count = 0;
-  if (input_itr != model_metadata.MemberEnd()) {
-    input_count = input_itr->value.Size();
+  ni::TritonJson::Value inputs_json;
+  if (model_metadata.Find("inputs", &inputs_json)) {
+    input_count = inputs_json.ArraySize();
   }
   if (input_count != 1) {
     std::cerr << "expecting 1 input, got " << input_count << std::endl;
     exit(1);
   }
 
-  const auto& output_itr = model_metadata.FindMember("outputs");
   size_t output_count = 0;
-  if (output_itr != model_metadata.MemberEnd()) {
-    output_count = output_itr->value.Size();
+  ni::TritonJson::Value outputs_json;
+  if (model_metadata.Find("outputs", &outputs_json)) {
+    output_count = outputs_json.ArraySize();
   }
   if (output_count != 1) {
     std::cerr << "expecting 1 output, got " << output_count << std::endl;
@@ -566,16 +579,15 @@ ParseModelHttp(
   const auto& output_dtype_itr = output_metadata.FindMember("datatype");
   if (output_dtype_itr == output_metadata.MemberEnd()) {
     std::cerr << "output missing datatype in the metadata for model'"
-              << model_metadata["name"].GetString() << "'" << std::endl;
+              << model_name << "'" << std::endl;
     exit(1);
   }
   auto datatype = std::string(
       output_dtype_itr->value.GetString(),
       output_dtype_itr->value.GetStringLength());
   if (datatype.compare("FP32") != 0) {
-    std::cerr << "expecting output datatype to be FP32, model '"
-              << model_metadata["name"].GetString() << "' output type is '"
-              << datatype << "'" << std::endl;
+    std::cerr << "expecting output datatype to be FP32, model '" << model_name
+              << "' output type is '" << datatype << "'" << std::endl;
     exit(1);
   }
 
@@ -591,16 +603,15 @@ ParseModelHttp(
   // image instance is inferred at a time).
   if (max_batch_size == 0) {
     if (batch_size != 1) {
-      std::cerr << "batching not supported for model '"
-                << model_metadata["name"].GetString() << "'" << std::endl;
+      std::cerr << "batching not supported for model '" << model_name << "'"
+                << std::endl;
       exit(1);
     }
   } else {
     // max_batch_size > 0
     if (batch_size > (size_t)max_batch_size) {
       std::cerr << "expecting batch size <= " << max_batch_size
-                << " for model '" << model_metadata["name"].GetString() << "'"
-                << std::endl;
+                << " for model '" << model_name << "'" << std::endl;
       exit(1);
     }
   }
@@ -629,8 +640,8 @@ ParseModelHttp(
       }
     }
   } else {
-    std::cerr << "output missing shape in the metadata for model'"
-              << model_metadata["name"].GetString() << "'" << std::endl;
+    std::cerr << "output missing shape in the metadata for model'" << model_name
+              << "'" << std::endl;
     exit(1);
   }
 
@@ -643,13 +654,13 @@ ParseModelHttp(
   if (input_shape_itr != input_metadata.MemberEnd()) {
     if (input_shape_itr->value.Size() != expected_input_dims) {
       std::cerr << "expecting input to have " << expected_input_dims
-                << " dimensions, model '" << model_metadata["name"].GetString()
-                << "' input has " << input_shape_itr->value.Size() << std::endl;
+                << " dimensions, model '" << model_name << "' input has "
+                << input_shape_itr->value.Size() << std::endl;
       exit(1);
     }
   } else {
-    std::cerr << "input missing shape in the metadata for model'"
-              << model_metadata["name"].GetString() << "'" << std::endl;
+    std::cerr << "input missing shape in the metadata for model'" << model_name
+              << "'" << std::endl;
     exit(1);
   }
 
@@ -693,8 +704,7 @@ ParseModelHttp(
           model_info->input_datatype_, &(model_info->type1_),
           &(model_info->type3_))) {
     std::cerr << "unexpected input datatype '" << model_info->input_datatype_
-              << "' for model \"" << model_metadata["name"].GetString()
-              << std::endl;
+              << "' for model \"" << model_name << std::endl;
     exit(1);
   }
 }
@@ -852,7 +862,7 @@ main(int argc, char** argv)
 
   ModelInfo model_info;
   if (protocol == ProtocolType::HTTP) {
-    rapidjson::Document model_metadata;
+    ni::TritonJson::Value model_metadata;
     err = triton_client.http_client_->ModelMetadata(
         &model_metadata, model_name, model_version, http_headers);
     if (!err.IsOk()) {

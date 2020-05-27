@@ -34,27 +34,14 @@
 
 // This header can be used both within Triton server and externally
 // (i.e. in source that interacts only via TRITONSERVER API). Status
-// is handled differently in these two cases.
-#if defined(TRITONJSON_INTERNAL_STATUS)
-
-#include "src/core/status.h"
-#define TRITONJSON_STATUSTYPE Status
-#define TRITONJSON_STATUSRETURN(M) return Status(Status::Code::INTERNAL, (M))
-#define TRITONJSON_STATUSSUCCESS Status::Success
-
-#elif defined(TRITONJSON_TRITONSERVER_STATUS)
-
-#include "src/core/tritonserver.h"
-#define TRITONJSON_STATUSTYPE TRITONSERVER_Error*
-#define TRITONJSON_STATUSRETURN(M) \
-  return TRITONSERVER_ErrorNew(TRITONSERVER_ERROR_INTERNAL, (M).c_str())
-#define TRITONJSON_STATUSSUCCESS nullptr
-
-#else
-
-#error "Must set TRITONJSON_INTERNAL_STATUS or TRITONJSON_TRITONSERVER_STATUS"
-
-#endif
+// is handled differently in these cases so the following macros must
+// be defined before including this header. As an example the defines
+// are shown here as returned by the TRITONSERVER API.
+//
+//   #define TRITONJSON_STATUSTYPE TRITONSERVER_Error*
+//   #define TRITONJSON_STATUSRETURN(M)
+//        return TRITONSERVER_ErrorNew(TRITONSERVER_ERROR_INTERNAL, (M).c_str())
+//   #define TRITONJSON_STATUSSUCCESS nullptr
 
 namespace nvidia { namespace inferenceserver {
 
@@ -128,7 +115,7 @@ class TritonJson {
     {
       if (value_ != nullptr) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, parsing only available for top-level document"));
+            std::string("JSON parsing only available for top-level document"));
       }
       document_.Parse(base, size);
       if (document_.HasParseError()) {
@@ -153,7 +140,7 @@ class TritonJson {
     {
       if (value_ != nullptr) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, writing only available for top-level document"));
+            std::string("JSON writing only available for top-level document"));
       }
       rapidjson::Writer<WriteBuffer> writer(*buffer);
       document_.Accept(writer);
@@ -167,7 +154,7 @@ class TritonJson {
     {
       if (value_ != nullptr) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, writing only available for top-level document"));
+            std::string("JSON writing only available for top-level document"));
       }
       rapidjson::PrettyWriter<WriteBuffer> writer(*buffer);
       document_.Accept(writer);
@@ -184,7 +171,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -202,7 +190,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -221,7 +210,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -238,7 +228,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -257,7 +248,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -274,7 +266,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -291,7 +284,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -308,7 +302,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -325,7 +320,8 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to add member to non-object"));
+            std::string("attempt to add JSON member '") + name +
+            "' to non-object");
       }
       object.AddMember(
           rapidjson::Value(rapidjson::StringRef(name)).Move(),
@@ -341,7 +337,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
       array.PushBack(value.value_->Move(), *allocator_);
       value.Release();
@@ -355,7 +351,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
       array.PushBack(
           rapidjson::Value(value.c_str(), value.size(), *allocator_).Move(),
@@ -370,7 +366,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
       array.PushBack(
           rapidjson::Value(value, len, *allocator_).Move(), *allocator_);
@@ -386,7 +382,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
       array.PushBack(rapidjson::StringRef(value), *allocator_);
       return TRITONJSON_STATUSSUCCESS;
@@ -401,7 +397,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
       array.PushBack(rapidjson::StringRef(value, len), *allocator_);
       return TRITONJSON_STATUSSUCCESS;
@@ -413,7 +409,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
 
       array.PushBack(rapidjson::Value(value).Move(), *allocator_);
@@ -426,7 +422,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
 
       array.PushBack(rapidjson::Value(value).Move(), *allocator_);
@@ -440,7 +436,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
 
       array.PushBack(rapidjson::Value(value).Move(), *allocator_);
@@ -453,7 +449,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, attempt to append to non-array"));
+            std::string("attempt to append JSON member to non-array"));
       }
 
       array.PushBack(rapidjson::Value(value).Move(), *allocator_);
@@ -465,7 +461,7 @@ class TritonJson {
     TRITONJSON_STATUSTYPE AssertType(TritonJson::ValueType type) const
     {
       if (static_cast<rapidjson::Type>(type) != AsValue().GetType()) {
-        TRITONJSON_STATUSRETURN(std::string("JSON, unexpected type"));
+        TRITONJSON_STATUSRETURN(std::string("unexpected type"));
       }
       return TRITONJSON_STATUSSUCCESS;
     }
@@ -487,7 +483,7 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       *value = TritonJson::Value(array[idx], allocator_);
@@ -524,7 +520,7 @@ class TritonJson {
     {
       if ((value_ == nullptr) || !value_->IsString()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-string as string"));
+            std::string("attempt to access JSON non-string as string"));
       }
       *value = value_->GetString();
       *len = value_->GetStringLength();
@@ -536,7 +532,7 @@ class TritonJson {
     {
       if ((value_ == nullptr) || !value_->IsBool()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-boolean as a boolean"));
+            std::string("attempt to access JSON non-boolean as boolean"));
       }
       *value = value_->GetBool();
       return TRITONJSON_STATUSSUCCESS;
@@ -548,7 +544,7 @@ class TritonJson {
     {
       if ((value_ == nullptr) || !value_->IsInt64()) {
         TRITONJSON_STATUSRETURN(std::string(
-            "JSON, failed accessing non-signed-integer as signed integer"));
+            "attempt to access JSON non-signed-integer as signed-integer"));
       }
       *value = value_->GetInt64();
       return TRITONJSON_STATUSSUCCESS;
@@ -560,7 +556,7 @@ class TritonJson {
     {
       if ((value_ == nullptr) || !value_->IsUint64()) {
         TRITONJSON_STATUSRETURN(std::string(
-            "JSON, failed accessing non-unsigned-integer as unsigned integer"));
+            "attempt to access JSON non-unsigned-integer as unsigned-integer"));
       }
       *value = value_->GetUint64();
       return TRITONJSON_STATUSSUCCESS;
@@ -571,7 +567,7 @@ class TritonJson {
     {
       if ((value_ == nullptr) || !value_->IsNumber()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-number as a double"));
+            std::string("attempt to access JSON non-number as double"));
       }
       *value = value_->GetDouble();
       return TRITONJSON_STATUSSUCCESS;
@@ -584,13 +580,13 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject() || !object.HasMember(name)) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access object member '") +
+            std::string("attempt to access non-existing object member '") +
             name + "'");
       }
       auto& v = object[name];
       if (!v.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-array as array"));
+            std::string("attempt to access JSON non-array as array"));
       }
       *value = TritonJson::Value(v, allocator_);
       return TRITONJSON_STATUSSUCCESS;
@@ -603,13 +599,13 @@ class TritonJson {
       rapidjson::Value& object = AsMutableValue();
       if (!object.IsObject() || !object.HasMember(name)) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access object member '") +
+            std::string("attempt to access non-existing object member '") +
             name + "'");
       }
       auto& v = object[name];
       if (!v.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-object as object"));
+            std::string("attempt to access JSON non-object as object"));
       }
       *value = TritonJson::Value(v, allocator_);
       return TRITONJSON_STATUSSUCCESS;
@@ -624,13 +620,13 @@ class TritonJson {
       const rapidjson::Value& object = AsValue();
       if (!object.IsObject() || !object.HasMember(name)) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access object member '") +
+            std::string("attempt to access non-existing object member '") +
             name + "'");
       }
       const auto& v = object[name];
       if (!v.IsString()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-string as string"));
+            std::string("attempt to access JSON non-string as string"));
       }
       *value = v.GetString();
       *len = v.GetStringLength();
@@ -644,13 +640,13 @@ class TritonJson {
       const rapidjson::Value& object = AsValue();
       if (!object.IsObject() || !object.HasMember(name)) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access object member '") +
+            std::string("attempt to access non-existing object member '") +
             name + "'");
       }
       const auto& v = object[name];
       if (!v.IsBool()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-boolean as a boolean"));
+            std::string("attempt to access JSON non-boolean as boolean"));
       }
       *value = v.GetBool();
       return TRITONJSON_STATUSSUCCESS;
@@ -663,13 +659,13 @@ class TritonJson {
       const rapidjson::Value& object = AsValue();
       if (!object.IsObject() || !object.HasMember(name)) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access object member '") +
+            std::string("attempt to access non-existing object member '") +
             name + "'");
       }
       const auto& v = object[name];
       if (!v.IsInt64()) {
         TRITONJSON_STATUSRETURN(std::string(
-            "JSON, failed accessing non-signed-integer as signed integer"));
+            "attempt to access JSON non-signed-integer as signed-integer"));
       }
       *value = v.GetInt64();
       return TRITONJSON_STATUSSUCCESS;
@@ -682,13 +678,13 @@ class TritonJson {
       const rapidjson::Value& object = AsValue();
       if (!object.IsObject() || !object.HasMember(name)) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access object member '") +
+            std::string("attempt to access non-existing object member '") +
             name + "'");
       }
       const auto& v = object[name];
       if (!v.IsUint64()) {
         TRITONJSON_STATUSRETURN(std::string(
-            "JSON, failed accessing non-unsigned-integer as unsigned integer"));
+            "attempt to access JSON non-unsigned-integer as unsigned-integer"));
       }
       *value = v.GetUint64();
       return TRITONJSON_STATUSSUCCESS;
@@ -701,13 +697,13 @@ class TritonJson {
       const rapidjson::Value& object = AsValue();
       if (!object.IsObject() || !object.HasMember(name)) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access object member '") +
+            std::string("attempt to access non-existing object member '") +
             name + "'");
       }
       const auto& v = object[name];
       if (!v.IsNumber()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-number as double"));
+            std::string("attempt to access JSON non-number as double"));
       }
       *value = v.GetDouble();
       return TRITONJSON_STATUSSUCCESS;
@@ -720,13 +716,13 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       auto& v = array[idx];
       if (!v.IsArray()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-array as array"));
+            std::string("attempt to access JSON non-array as array"));
       }
       *value = TritonJson::Value(v, allocator_);
       return TRITONJSON_STATUSSUCCESS;
@@ -739,13 +735,13 @@ class TritonJson {
       rapidjson::Value& array = AsMutableValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       auto& v = array[idx];
       if (!v.IsObject()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-object as object"));
+            std::string("attempt to access JSON non-object as object"));
       }
       *value = TritonJson::Value(v, allocator_);
       return TRITONJSON_STATUSSUCCESS;
@@ -761,13 +757,13 @@ class TritonJson {
       const rapidjson::Value& array = AsValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       const auto& v = array[idx];
       if (!v.IsString()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-string as string"));
+            std::string("attempt to access JSON non-string as string"));
       }
       *value = v.GetString();
       *len = v.GetStringLength();
@@ -781,13 +777,13 @@ class TritonJson {
       const rapidjson::Value& array = AsValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       const auto& v = array[idx];
       if (!v.IsBool()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-boolean as a boolean"));
+            std::string("attempt to access JSON non-boolean as boolean"));
       }
       *value = v.GetBool();
       return TRITONJSON_STATUSSUCCESS;
@@ -800,13 +796,13 @@ class TritonJson {
       const rapidjson::Value& array = AsValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       const auto& v = array[idx];
       if (!v.IsInt64()) {
         TRITONJSON_STATUSRETURN(std::string(
-            "JSON, failed accessing non-signed-integer as signed integer"));
+            "attempt to access JSON non-signed-integer as signed-integer"));
       }
       *value = v.GetInt64();
       return TRITONJSON_STATUSSUCCESS;
@@ -819,13 +815,13 @@ class TritonJson {
       const rapidjson::Value& array = AsValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       const auto& v = array[idx];
       if (!v.IsUint64()) {
         TRITONJSON_STATUSRETURN(std::string(
-            "JSON, failed accessing non-unsigned-integer as unsigned integer"));
+            "attempt to access JSON non-unsigned-integer as unsigned-integer"));
       }
       *value = v.GetUint64();
       return TRITONJSON_STATUSSUCCESS;
@@ -838,13 +834,13 @@ class TritonJson {
       const rapidjson::Value& array = AsValue();
       if (!array.IsArray() || (idx >= array.GetArray().Size())) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed attempt to access array index '") +
+            std::string("attempt to access non-existing array index '") +
             std::to_string(idx) + "'");
       }
       const auto& v = array[idx];
       if (!v.IsNumber()) {
         TRITONJSON_STATUSRETURN(
-            std::string("JSON, failed accessing non-number as double"));
+            std::string("attempt to access JSON non-number as double"));
       }
       *value = v.GetDouble();
       return TRITONJSON_STATUSSUCCESS;
