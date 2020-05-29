@@ -242,9 +242,11 @@ BackendResponder::ProcessTensor(
 
   // Done with the tensor, flush any pending pinned copies.
   need_sync_ |= FlushPendingPinned(buffer, memory_type, memory_type_id);
+#ifdef TRITON_ENABLE_GPU
   if (need_sync_ && (event_ != nullptr)) {
     cudaEventRecord(event_, stream_);
   }
+#endif  // TRITON_ENABLE_GPU
 }
 
 bool
@@ -259,7 +261,7 @@ BackendResponder::Finalize()
     }
     need_sync_ = false;
   }
-#endif
+#endif  // TRITON_ENABLE_GPU
 
   // After the above sync all the GPU->pinned copies are complete. Any
   // deferred copies of pinned->CPU can now be done.
@@ -586,7 +588,7 @@ BackendInputCollector::Finalize()
     cudaStreamSynchronize(stream_);
     need_sync_ = false;
   }
-#endif
+#endif  // TRITON_ENABLE_GPU
 
   // After the above sync all the GPU->pinned copies are complete. Any
   // deferred copies of pinned->CPU can now be done.
